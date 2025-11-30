@@ -2,17 +2,16 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kuis Sekolah (MathJax Support)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ujian Online Modern</title>
     
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
     <script>
     window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      },
-      svg: {
-        fontCache: 'global'
-      }
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
     };
     </script>
     <script type="text/javascript" id="MathJax-script" async
@@ -20,104 +19,174 @@
     </script>
 
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
-        /* Utility */
-        .hidden { display: none; }
-        .btn { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
-        .btn-danger { background: #dc3545; }
-        .btn-success { background: #28a745; }
-        .btn-warning { background: #ffc107; color: black; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0 15px; box-sizing: border-box; }
-        
-        /* Quiz Layout */
-        .quiz-header { display: flex; justify-content: space-between; background: #eee; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
-        .timer-box { font-weight: bold; color: #d9534f; font-size: 1.2em; }
-        .question-img { max-width: 100%; height: auto; margin: 10px 0; border: 1px solid #ddd; }
-        
-        /* Navigation Grid */
-        .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 5px; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
-        .nav-item { padding: 10px; background: #ddd; text-align: center; cursor: pointer; border-radius: 4px; }
-        .nav-item.answered { background: #28a745; color: white; }
-        .nav-item.active { border: 2px solid #000; font-weight: bold; }
+        :root {
+            --primary: #4e54c8;
+            --secondary: #8f94fb;
+            --accent: #ff6b6b;
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --text: #333;
+        }
 
-        .options label { display: block; padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; cursor: pointer; border-radius: 4px; }
-        .options label:hover { background: #f9f9f9; }
-        .options input { width: auto; margin-right: 10px; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            margin: 0;
+            padding: 20px 10px;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: var(--card);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2, h3 { text-align: center; color: var(--primary); margin-top: 0; }
         
-        /* MathJax Spacing Fix */
-        mjx-container { margin: 0 !important; }
+        label { font-weight: 600; font-size: 0.9em; color: #666; display: block; margin-top: 15px; }
+        select, input {
+            width: 100%; padding: 12px; margin-top: 5px;
+            border: 2px solid #eee; border-radius: 8px; font-size: 1em;
+            outline: none; transition: 0.3s; box-sizing: border-box;
+        }
+        select:focus, input:focus { border-color: var(--primary); }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 8px;
+            font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 20px;
+            color: white; background: var(--primary); transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-danger { background: var(--accent); }
+        .btn-nav { width: 48%; margin-top: 0; background: var(--primary); }
+        
+        .quiz-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8f9fa; padding: 15px; border-radius: 10px;
+            margin-bottom: 20px; border-left: 5px solid var(--accent);
+        }
+        .timer-box { 
+            font-size: 1.2em; font-weight: bold; color: var(--accent); 
+            background: #fff0f0; padding: 5px 10px; border-radius: 5px;
+        }
+        .student-name { font-weight: bold; color: var(--primary); }
+
+        #q-text { font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; }
+        .question-img { 
+            max-width: 100%; height: auto; display: block; 
+            margin: 10px auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .options label {
+            display: flex; align-items: flex-start; padding: 12px; margin-bottom: 10px;
+            background: #fff; border: 2px solid #eee; border-radius: 8px; cursor: pointer;
+        }
+        .options label:hover { border-color: var(--secondary); background: #f9f9ff; }
+        .options input:checked + span { color: var(--primary); font-weight: bold; }
+        .options input { margin-right: 15px; margin-top: 5px; transform: scale(1.2); }
+
+        .nav-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            gap: 8px; margin-top: 25px; padding-top: 20px; border-top: 1px dashed #ddd;
+            max-height: 200px; overflow-y: auto;
+        }
+        .nav-item {
+            background: #eee; padding: 10px 0; text-align: center; border-radius: 6px;
+            cursor: pointer; font-weight: 600;
+        }
+        .nav-item.active { background: var(--primary); color: white; }
+        .nav-item.answered { background: #2ecc71; color: white; }
+        
+        .hidden { display: none; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
+        
+        #loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); display: flex; 
+            align-items: center; justify-content: center; flex-direction: column; z-index: 10;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin-bottom: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="container">
+    
     <div id="login-page">
-        <h2>Login Kuis</h2>
-        <div id="loading-data">Memuat data kelas...</div>
+        <h2>Ujian Online</h2>
+        <div id="loading-overlay">
+            <div class="spinner"></div>
+            <span>Menghubungkan ke Server...</span>
+        </div>
         
         <div id="login-form" class="hidden">
             <label>Pilih Kelas</label>
             <select id="kelas-select" onchange="filterSiswa()"><option value="">-- Pilih Kelas --</option></select>
             
-            <label>Pilih Nama (ID)</label>
+            <label>Nama Siswa</label>
             <select id="nama-select"><option value="">-- Pilih Nama --</option></select>
             
-            <label>Pilih Mata Pelajaran</label>
+            <label>Mata Pelajaran</label>
             <select id="mapel-select">
                 <option value="">-- Pilih Soal --</option>
-                <option value="IPA_7.csv">IPA Kelas 7</option>
-                <option value="IPA_8.csv">IPA Kelas 8</option>
-                <option value="IPA_97.csv">IPA Kelas 9</option>
-                <option value="PKN_7.csv">PKN Kelas 7</option>
-                <option value="PKN_8.csv">PKN Kelas 8</option>
-                <option value="PKN_9.csv">PKN Kelas 9</option>
-                <option value="Matematika_7.csv">Matematika Kelas 7</option>
-                <option value="Matematika_8.csv">Matematika Kelas 8</option>
-                <option value="Matematika_9.csv">Matematika Kelas 9</option>
+                <option value="IPA_7.xlsx">IPA Kelas 7</option>
+                <option value="IPA_8.xlsx">IPA Kelas 8</option>
+                <option value="IPA_9.xlsx">IPA Kelas 9</option>
+                <option value="PKN_7.xlsx">PKN Kelas 7</option>
+                <option value="PKN_8.xlsx">PKN Kelas 8</option>
+                <option value="Matematika_7.xlsx">Matematika Kelas 7</option>
+                <option value="Matematika_8.xlsx">Matematika Kelas 8</option>
             </select>
 
             <label>Password</label>
             <input type="password" id="password-input" placeholder="Masukkan Password">
             
-            <button class="btn" onclick="prosesLogin()">Masuk</button>
-            <p id="login-msg" style="color: red; margin-top: 10px;"></p>
+            <button class="btn" onclick="prosesLogin()">MULAI UJIAN</button>
+            <p id="login-msg" style="color: var(--accent); text-align: center; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
     <div id="quiz-page" class="hidden">
         <div class="quiz-header">
-            <span id="student-info">Siswa: -</span>
-            <span class="timer-box" id="timer-display">00:00</span>
+            <div class="student-name" id="student-info">Siswa</div>
+            <div class="timer-box" id="timer-display">00:00</div>
         </div>
 
         <div id="question-container">
-            <h3 id="q-number">Soal No. 1</h3>
-            <div id="q-text" style="font-size: 1.1em; margin-bottom: 15px;">Pertanyaan...</div>
+            <h3 id="q-number" style="text-align: left; font-size: 1rem; color: #888;">No. 1</h3>
+            <div id="q-text">Loading...</div>
             <div id="q-image-container"></div>
             
-            <div class="options" id="options-container">
-                </div>
+            <div class="options" id="options-container"></div>
         </div>
 
-        <div style="margin-top: 20px; display: flex; justify-content: space-between;">
-            <button class="btn btn-warning" onclick="prevQuestion()">Sebelumnya</button>
-            <button class="btn btn-success" onclick="nextQuestion()">Selanjutnya</button>
+        <div class="nav-buttons">
+            <button class="btn btn-nav" style="background: #95a5a6;" onclick="prevQuestion()">Sebelumnya</button>
+            <button class="btn btn-nav" onclick="nextQuestion()">Selanjutnya</button>
         </div>
         
-        <div class="nav-grid" id="nav-grid">
-            </div>
+        <div class="nav-grid" id="nav-grid"></div>
         
-        <button class="btn btn-danger" style="width: 100%; margin-top: 30px;" onclick="selesaiKuis()">Kirim Jawaban</button>
+        <button class="btn btn-danger" style="margin-top: 30px;" onclick="selesaiKuis()">KIRIM JAWABAN</button>
     </div>
 </div>
 
 <script>
-    // --- KONFIGURASI ---
+    // --- PENTING: MENGGUNAKAN URL YANG SUDAH TERBUKTI LANCAR (DARI KODE CSV ANDA) ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwYiAaBs5fXpdVKw074DlaXf8WstjM7XcpB4OjQwn5WhT2AAZSgkhC0saR0GOoLG2Qw2Q/exec"; 
     
-    // --- VARIABEL GLOBAL ---
     let allSiswaData = [];
     let currentSoalData = [];
     let userAnswers = {}; 
@@ -127,27 +196,28 @@
     let currentUser = {};
     let currentMapel = "";
 
-    // --- INISIALISASI ---
+    // 1. Load Data Siswa (Backend)
     window.onload = function() {
         fetch(SCRIPT_URL + "?action=getDataSiswa")
             .then(res => res.json())
             .then(data => {
                 allSiswaData = data;
                 populateKelas();
-                document.getElementById('loading-data').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.add('hidden');
                 document.getElementById('login-form').classList.remove('hidden');
             })
-            .catch(err => alert("Gagal mengambil data siswa: " + err));
+            .catch(err => {
+                alert("Gagal koneksi. Coba refresh.");
+                document.getElementById('loading-overlay').innerHTML = "Gagal Koneksi";
+            });
     };
 
-    // --- LOGIKA LOGIN ---
     function populateKelas() {
         const kelasSet = new Set(allSiswaData.map(s => s.kelas));
         const sel = document.getElementById('kelas-select');
         kelasSet.forEach(k => {
             let opt = document.createElement('option');
-            opt.value = k;
-            opt.innerText = k;
+            opt.value = k; opt.innerText = k;
             sel.appendChild(opt);
         });
     }
@@ -156,12 +226,9 @@
         const k = document.getElementById('kelas-select').value;
         const nSel = document.getElementById('nama-select');
         nSel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        
-        const filtered = allSiswaData.filter(s => s.kelas == k);
-        filtered.forEach(s => {
+        allSiswaData.filter(s => s.kelas == k).forEach(s => {
             let opt = document.createElement('option');
-            opt.value = s.id; 
-            opt.innerText = s.nama;
+            opt.value = s.id; opt.innerText = s.nama;
             nSel.appendChild(opt);
         });
     }
@@ -171,12 +238,10 @@
         const pass = document.getElementById('password-input').value;
         const mapelFile = document.getElementById('mapel-select').value;
 
-        if(!id || !pass || !mapelFile) {
-            alert("Lengkapi semua data!"); return;
-        }
+        if(!id || !pass || !mapelFile) { alert("Lengkapi data!"); return; }
 
-        document.getElementById('login-msg').innerText = "Sedang login...";
-
+        document.getElementById('login-msg').innerText = "Sedang masuk...";
+        
         fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', id: id, password: pass })
@@ -186,71 +251,73 @@
             if(resp.result == "success") {
                 currentUser = { id: id, nama: resp.nama };
                 currentMapel = mapelFile; 
-                loadSoal(mapelFile);
+                // LOAD EXCEL (Fitur Baru)
+                loadSoalXLSX("Soal/" + mapelFile);
             } else {
                 document.getElementById('login-msg').innerText = resp.message;
             }
-        });
+        })
+        .catch(() => document.getElementById('login-msg').innerText = "Gagal login.");
     }
 
-    // --- LOGIKA CSV & KUIS ---
-    function loadSoal(filename) {
-        fetch(filename)
-            .then(res => res.text())
-            .then(text => {
-                parseCSV(text);
-                startQuiz();
+    // 2. Load Soal Excel (SheetJS)
+    function loadSoalXLSX(filepath) {
+        document.getElementById('login-msg').innerText = "Mengunduh soal...";
+        fetch(filepath)
+            .then(res => {
+                if(!res.ok) throw new Error("File soal tidak ditemukan di folder Soal/");
+                return res.arrayBuffer();
             })
-            .catch(err => alert("Gagal memuat soal: " + err));
+            .then(ab => {
+                const wb = XLSX.read(ab, {type: 'array'});
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(ws);
+                processExcelData(rawData);
+            })
+            .catch(err => {
+                alert("Error: " + err.message + "\nPastikan nama file di folder 'Soal' sama persis.");
+                document.getElementById('login-msg').innerText = "Gagal memuat soal.";
+            });
     }
 
-    function parseCSV(text) {
-        const lines = text.trim().split('\n');
-        for(let i=1; i<lines.length; i++) {
-            // Kita pakai Regex sederhana untuk handle koma, tapi
-            // PENTING: Jangan gunakan koma (,) di dalam rumus matematika di CSV
-            // Gunakan titik koma (;) atau spasi sebagai pemisah di dalam rumus.
-            const cols = lines[i].split(','); 
-            
-            if(cols.length >= 7) {
-                currentSoalData.push({
-                    no: cols[0],
-                    soal: cols[1],
-                    opsi: [cols[2], cols[3], cols[4], cols[5]],
-                    kunci: cols[6].trim().toUpperCase(),
-                    waktu: parseInt(cols[7]) || 60,
-                    gambar: cols[8] ? cols[8].trim() : ""
-                });
-                timers[i-1] = parseInt(cols[7]) || 60; 
-            }
-        }
+    function processExcelData(json) {
+        currentSoalData = json.map((row, index) => {
+            let w = row['timer'] || 60;
+            timers[index] = w;
+            return {
+                no: row['NO'],
+                soal: row['SOAL'],
+                opsi: [row['PILIHAN A'], row['PILIHAN B'], row['PILIHAN C'], row['PILIHAN D']],
+                kunci: row['KUNCI'] ? row['KUNCI'].toString().trim().toUpperCase() : "A",
+                waktu: w,
+                gambar: row['GAMBAR']
+            };
+        });
+        startQuiz();
     }
 
+    // 3. Quiz UI
     function startQuiz() {
         document.getElementById('login-page').classList.add('hidden');
         document.getElementById('quiz-page').classList.remove('hidden');
-        document.getElementById('student-info').innerText = "Siswa: " + currentUser.nama;
+        document.getElementById('student-info').innerText = currentUser.nama;
         renderNavGrid();
         showQuestion(0);
     }
 
     function showQuestion(idx) {
         clearInterval(timerInterval);
-        
         currentIdx = idx;
         const data = currentSoalData[idx];
         
         document.getElementById('q-number').innerText = "Soal No. " + (idx + 1);
-        
-        // PERUBAHAN PENTING: Gunakan innerHTML agar tag MathJax terbaca
-        document.getElementById('q-text').innerHTML = data.soal;
+        document.getElementById('q-text').innerHTML = data.soal; 
         
         const imgCont = document.getElementById('q-image-container');
         imgCont.innerHTML = "";
         if(data.gambar) {
             let img = document.createElement('img');
-            img.src = data.gambar;
-            img.className = 'question-img';
+            img.src = data.gambar; img.className = 'question-img';
             imgCont.appendChild(img);
         }
 
@@ -258,34 +325,35 @@
         optCont.innerHTML = "";
         const labels = ['A', 'B', 'C', 'D'];
         data.opsi.forEach((val, i) => {
-            let lbl = document.createElement('label');
             let checked = userAnswers[idx] == labels[i] ? "checked" : "";
-            // Gunakan innerHTML juga untuk opsi jawaban (siapa tahu ada rumus di jawaban)
-            lbl.innerHTML = `<input type="radio" name="jawaban" value="${labels[i]}" onclick="saveAnswer('${labels[i]}')" ${checked}> ${labels[i]}. ${val}`;
-            optCont.appendChild(lbl);
+            let html = `
+                <label>
+                    <input type="radio" name="jawaban" value="${labels[i]}" onclick="saveAnswer('${labels[i]}')" ${checked}>
+                    <span>${labels[i]}. ${val}</span>
+                </label>`;
+            optCont.innerHTML += html;
         });
 
         updateNavGrid();
         startTimer(idx);
-        
-        // TRIGGER MATHJAX UNTUK MERENDER RUMUS BARU
-        if(window.MathJax) {
-            MathJax.typesetPromise();
-        }
+        if(window.MathJax) MathJax.typesetPromise();
     }
 
     function startTimer(idx) {
         const display = document.getElementById('timer-display');
-        
+        const updateDisplay = () => {
+            let m = Math.floor(timers[idx] / 60);
+            let s = timers[idx] % 60;
+            display.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+        };
+        updateDisplay();
         timerInterval = setInterval(() => {
             if(timers[idx] > 0) {
                 timers[idx]--;
-                let m = Math.floor(timers[idx] / 60);
-                let s = timers[idx] % 60;
-                display.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                updateDisplay();
             } else {
                 clearInterval(timerInterval);
-                display.innerText = "Waktu Habis!";
+                display.innerText = "00:00";
             }
         }, 1000);
     }
@@ -294,26 +362,15 @@
         userAnswers[currentIdx] = val;
         updateNavGrid();
     }
-
-    function nextQuestion() {
-        if(currentIdx < currentSoalData.length - 1) {
-            showQuestion(currentIdx + 1);
-        }
-    }
-
-    function prevQuestion() {
-        if(currentIdx > 0) {
-            showQuestion(currentIdx - 1);
-        }
-    }
+    function nextQuestion() { if(currentIdx < currentSoalData.length - 1) showQuestion(currentIdx + 1); }
+    function prevQuestion() { if(currentIdx > 0) showQuestion(currentIdx - 1); }
 
     function renderNavGrid() {
         const grid = document.getElementById('nav-grid');
         grid.innerHTML = "";
         currentSoalData.forEach((_, i) => {
             let btn = document.createElement('div');
-            btn.className = 'nav-item';
-            btn.innerText = i + 1;
+            btn.className = 'nav-item'; btn.innerText = i + 1;
             btn.id = 'nav-' + i;
             btn.onclick = () => showQuestion(i);
             grid.appendChild(btn);
@@ -330,44 +387,39 @@
     }
 
     function selesaiKuis() {
-        if(!confirm("Yakin ingin mengirim jawaban?")) return;
+        if(!confirm("Yakin ingin mengirim?")) return;
         clearInterval(timerInterval);
+        const btn = document.querySelector('.btn-danger');
+        btn.innerText = "Mengirim..."; btn.disabled = true;
 
-        let benar = 0;
-        let salah = 0;
-        let kosong = 0;
-        
+        let benar = 0, salah = 0, kosong = 0;
         currentSoalData.forEach((soal, i) => {
             let jwb = userAnswers[i];
-            if(!jwb) {
-                kosong++;
-            } else if (jwb === soal.kunci) {
-                benar++;
-            } else {
-                salah++;
-            }
+            if(!jwb) kosong++;
+            else if (jwb === soal.kunci) benar++;
+            else salah++;
         });
-
         let nilai = (benar / currentSoalData.length) * 100;
 
         fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'submitNilai',
-                mapel: currentMapel.replace('.csv',''), 
+                mapel: currentMapel.replace('.xlsx',''), 
                 nama: currentUser.nama,
-                benar: benar,
-                salah: salah,
-                kosong: kosong,
+                benar: benar, salah: salah, kosong: kosong,
                 nilai: nilai.toFixed(2)
             })
         })
         .then(res => res.json())
         .then(resp => {
-            alert("Nilai Anda: " + nilai.toFixed(2) + "\nTerima kasih telah mengerjakan.");
+            alert("Nilai: " + nilai.toFixed(2));
             location.reload(); 
         })
-        .catch(err => alert("Gagal mengirim nilai."));
+        .catch(err => {
+            alert("Gagal kirim. Screenshot layar ini.");
+            btn.innerText = "Kirim Ulang"; btn.disabled = false;
+        });
     }
 </script>
 
